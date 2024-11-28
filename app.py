@@ -1,3 +1,4 @@
+import os
 import streamlit as st
 from streamlit_option_menu import option_menu
 from app.utils.session import set_logged_in, is_logged_in
@@ -5,7 +6,7 @@ from app.pages.login import render_page as login_page
 from app.pages.view_vehicle_details import render_page as view_vehicle_page
 from app.pages.guest_pass_registration import render_page as guest_pass_registration
 from app.pages.vehicle_history import render_page as history_page
-import time
+
 # Set page configuration
 st.set_page_config(
     page_title="Smart Campus Vehicle Access Control System",  
@@ -60,6 +61,9 @@ def main():
         st.warning("You must log in to access this page.")
         login_page()
 
-
 if __name__ == "__main__":
+    # Use the Azure App Service's PORT if available, otherwise default to 8501
+    port = int(os.environ.get("PORT", 8501))
+    st.server.server_port = port
+    st.server.server_address = "0.0.0.0"
     main()
