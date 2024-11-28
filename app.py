@@ -62,8 +62,5 @@ def main():
         login_page()
 
 if __name__ == "__main__":
-    # Use the Azure App Service's PORT if available, otherwise default to 8501
-    port = int(os.environ.get("PORT", 8501))
-    st.server.server_port = port
-    st.server.server_address = "0.0.0.0"
-    main()
+    port = int(os.getenv('PORT', 8501))
+    st.run(port=port, address="0.0.0.0")
