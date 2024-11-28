@@ -1,0 +1,20 @@
+# Command to install the dependencies:
+# pip install -r requirements.txt --no-warn-script-location
+
+# to run: streamlit run app.py
+
+#To ensure that your Streamlit app runs automatically whenever you save changes to your code
+#streamlit run app.py --server.runOnSave=true
+
+
+streamlit
+st-pages
+streamlit-option-menu
+sqlalchemy
+pyodbc
+python-dotenv
+sqlalchemy-pytds
+streamlit-autorefresh
+
+
+
