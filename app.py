@@ -62,5 +62,4 @@ def main():
         login_page()
 
 if __name__ == "__main__":
-    port = int(os.getenv('PORT', 8501))
-    st.run(port=port, address="0.0.0.0")
+    main()
