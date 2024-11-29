@@ -61,7 +61,7 @@ def show_registration_form(form_container):
             
             # Vehicle Information
             st.subheader("Vehicle Information")
-            plate_number = st.text_input("Vehicle Plate Number *")
+            plate_number = st.text_input("Vehicle Plate Number *").upper()
             vehicle_type = st.selectbox("Vehicle Type", ["Car", "Motorcycle", "Van", "Others"])
             
             # Visit Details
@@ -114,6 +114,18 @@ def save_guest_registration(name, id_number, phone_number, email, address, plate
         return False
 
 def render_guest_page():
+    # Wake up the DB with a simple query, only if not done already
+    if "db_woken_up" not in st.session_state:
+        db = SessionLocal()
+        try:
+            db.execute(text("SELECT 1"))  # Simple query to wake up the DB
+            db.commit()
+            st.session_state.db_woken_up = True  # Mark the DB as awake
+        except Exception as e:
+            st.error(f"An error occurred while connecting to the database: {str(e)}")
+        finally:
+            db.close()
+
     # Initialize the state
     if "form_submitted" not in st.session_state:
         st.session_state.form_submitted = False
@@ -130,4 +142,3 @@ def render_guest_page():
             st.session_state.form_submitted = True
             form_container.empty()
             st.rerun()  # Replace this in real implementation
-
