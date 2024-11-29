@@ -11,7 +11,7 @@ from app.pages.guest_form import render_guest_page
 st.set_page_config(
     page_title="Smart Campus Vehicle Access Control System",  
     page_icon="🚗", 
-    layout="wide",
+    layout="wide"
 )
 
 # Navigation options for logged-in users
