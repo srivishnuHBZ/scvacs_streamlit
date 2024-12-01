@@ -3,6 +3,7 @@ from sqlalchemy.orm import sessionmaker, declarative_base
 import urllib.parse
 import pandas as pd
 import streamlit as st
+from sqlalchemy.exc import SQLAlchemyError
 
 server = "34.30.185.244"  
 database = "scvacs"       
@@ -152,3 +153,49 @@ def get_latest_vehicle_detail():
                 'registration_status': latest_vehicle.registration_status,
                 'detection_time': latest_vehicle.timestamp.strftime('%d-%m-%Y %H:%M:%S')
             }])
+
+
+# guest pass registration
+def fetch_pending_guests():
+    """Fetch all pending guests from guest_temp table."""
+    query = """
+    SELECT name, plate_number, vehicle_type, phone_number, visit_purpose, check_in_date, check_out_date 
+    FROM guest_temp
+    """
+    with engine.connect() as conn:
+        try:
+            result = conn.execute(text(query)).fetchall()
+            return pd.DataFrame(result, columns=["Name", "Plate Number", "Vehicle Type", "Phone Number", "Visit Purpose", "Check-in Date", "Check-out Date"])
+        except SQLAlchemyError as e:
+            st.error(f"Error fetching data: {e}")
+            return pd.DataFrame()
+
+def approve_guest(plate_number):
+    """Approve a guest by moving their data to the guest table and deleting from guest_temp."""
+    try:
+        with SessionLocal() as session:
+            insert_query = """
+            INSERT INTO guest (name, plate_number, id_number, phone_number, email, address, visit_purpose, check_in_date, check_out_date)
+            SELECT name, plate_number, id_number, phone_number, email, address, visit_purpose, check_in_date, check_out_date
+            FROM guest_temp WHERE plate_number = :plate_number
+            """
+            delete_query = "DELETE FROM guest_temp WHERE plate_number = :plate_number"
+            session.execute(text(insert_query), {"plate_number": plate_number})
+            session.execute(text(delete_query), {"plate_number": plate_number})
+            session.commit()
+            st.success(f"Guest with plate number {plate_number} approved successfully.")
+    except SQLAlchemyError as e:
+        session.rollback()
+        st.error(f"Error approving guest: {e}")
+
+def reject_guest(plate_number):
+    """Reject a guest by deleting their data from guest_temp."""
+    try:
+        with SessionLocal() as session:
+            delete_query = "DELETE FROM guest_temp WHERE plate_number = :plate_number"
+            session.execute(text(delete_query), {"plate_number": plate_number})
+            session.commit()
+            st.warning(f"Guest with plate number {plate_number} rejected.")
+    except SQLAlchemyError as e:
+        session.rollback()
+        st.error(f"Error rejecting guest: {e}")

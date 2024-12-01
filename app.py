@@ -1,76 +1,86 @@
 import streamlit as st
-from streamlit_option_menu import option_menu
+import streamlit_autorefresh
+from app.pages.sidebar import render_sidebar
 from app.utils.session import set_logged_in, is_logged_in
 from app.pages.login import render_page as login_page
 from app.pages.view_vehicle_details import render_page as view_vehicle_page
 from app.pages.guest_pass_registration import render_page as guest_pass_registration
 from app.pages.vehicle_history import render_page as history_page
 from app.pages.guest_form import render_guest_page
+from app.pages.sidebar import LOGGED_IN_MENU
+from app.database import fetch_pending_guests
 
 # Set page configuration
 st.set_page_config(
     page_title="Smart Campus Vehicle Access Control System",  
     page_icon="🚗", 
-    layout="wide"
+    layout="wide",
+    initial_sidebar_state="expanded"
 )
 
-# Navigation options for logged-in users
-LOGGED_IN_MENU = {
-    "View Vehicle Details": view_vehicle_page,
-    "Guest Pass Registration": guest_pass_registration,
-    "Vehicle History": history_page,
-    "Logout": None,  # Logout is handled separately
-}
-
-def render_sidebar():
-    with st.sidebar:
-        if not is_logged_in():
-            return option_menu(
-                "Main Menu",
-                ["Login"],
-                icons=["box-arrow-in-right"],
-                menu_icon="list",
-                default_index=0,
-            )
-        return option_menu(
-            "Main Menu",
-            list(LOGGED_IN_MENU.keys()),
-            icons=["eye", "person-plus", "clock-history", "box-arrow-right"],
-            menu_icon="list",
-            default_index=0,
-        )
+def initialize_session_state():
+    """Initialize session state variables if they don't exist."""
+    if "logged_in" not in st.session_state:
+        st.session_state.logged_in = False
+    if "action_done" not in st.session_state:
+        st.session_state.action_done = False
+    if "guest_actions" not in st.session_state:
+        st.session_state.guest_actions = {}
 
 def get_page_route():
-    # Get the query parameters using the new method
+    """Get the current page route from query parameters."""
     return st.query_params.get("page", "main")
 
+def handle_logout():
+    """Handle user logout."""
+    st.session_state.logged_in = False
+    st.session_state.action_done = False
+    st.success("👋 Logged out successfully!")
+    st.rerun()
+
 def main():
-    # Check the route
+    # Initialize session state
+    initialize_session_state()
+    
+    # Fetch pending guests
+    try:
+        latest_pending_guests = fetch_pending_guests()
+    except Exception as e:
+        st.error(f"Error fetching pending guests: {e}")
+        latest_pending_guests = None
+    
+    # Get route and selected page
     route = get_page_route()
     
+    # Render sidebar with latest pending guests
+    selected = render_sidebar()
+    
     if route == "guest":
-        # Render guest page without sidebar
+        # Render guest page without sidebar for external users
         render_guest_page()
-    else:
-        # Regular admin portal with sidebar
-        selected = render_sidebar()
-        
-        # Your existing routing logic
-        if selected == "Login":
-            if not is_logged_in():
-                login_page()
-            else:
-                st.success("You are already logged in! Navigate using the menu.")
-        elif is_logged_in():
-            if selected in LOGGED_IN_MENU and LOGGED_IN_MENU[selected]:
-                LOGGED_IN_MENU[selected]()
-            elif selected == "Logout":
-                st.session_state["logged_in"] = False
-                st.success("Logged out successfully!")
-                st.rerun()
-        else:
-            st.warning("You must log in to access this page.")
+        return
+    
+    # Handle page routing
+    if selected == "Login":
+        if not is_logged_in():
             login_page()
+        else:
+            st.success("✅ You are already logged in! Use the menu to navigate.")
+            
+    elif is_logged_in():
+        if selected == "Logout":
+            handle_logout()
+        elif selected in LOGGED_IN_MENU and LOGGED_IN_MENU[selected]:
+            # Render the selected page
+            page_function = globals()[LOGGED_IN_MENU[selected]]
+            page_function()
+    else:
+        st.warning("🔒 You must log in to access this page.")
+        login_page()
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except Exception as e:
+        st.error(f"An error occurred: {str(e)}")
+        st.exception(e)  # This will show the full traceback in development

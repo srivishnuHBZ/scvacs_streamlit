@@ -20,7 +20,9 @@ def validate_plate_number(plate):
     pattern = re.compile(r'^[A-Za-z0-9]{1,10}$')
     return bool(pattern.match(plate))
 
+
 def render_page():
+        
     st.title("Guest Pass Registration")
 
     # Initialize session state
@@ -121,13 +123,14 @@ def render_page():
 
     # Right column - Recent Registrations
     with col2:
+
         st.subheader("Recent Guest Registrations")
 
         # Fetch and display recent registrations
         df = fetch_recent_registrations()
 
         if not df.empty:
-            df['Check-in Date'] = pd.to_datetime(df['Check-in Date']).dt.strftime('%Y-%m-%d')
+            df['Check-in Date'] = pd.to_datetime(df['Check-in Date']).dt.strftime('%d-%m-%Y')
             st.dataframe(
                 df,
                 hide_index=True,

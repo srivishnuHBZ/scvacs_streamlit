@@ -7,7 +7,6 @@ from app.database import Base, SessionLocal
 
 class GuestTemp(Base):
     __tablename__ = "guest_temp"
-    # __table_args__ = {'extend_existing': True}
     
     guest_id = Column(UNIQUEIDENTIFIER, primary_key=True, server_default=text('NEWID()'))
     name = Column(String(255), nullable=False)
