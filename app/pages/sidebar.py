@@ -1,7 +1,9 @@
 import streamlit as st
+import time
 from streamlit_option_menu import option_menu
 from app.utils.session import is_logged_in
 from app.database import approve_guest, reject_guest, fetch_pending_guests
+from streamlit_autorefresh import st_autorefresh
 
 # Navigation options for logged-in users
 LOGGED_IN_MENU = {
@@ -14,43 +16,43 @@ LOGGED_IN_MENU = {
 def handle_guest_approval(guest, index):
     """Handle the approval/rejection of a guest."""
     guest_key = guest['Plate Number']
-    col1, col2 = st.columns([1, 1])
+    col1, col2 = st.columns(2, gap="small")
 
-    # Check if this guest has already been acted upon
-    if guest_key in st.session_state.guest_actions:
-        action = st.session_state.guest_actions[guest_key]
-        st.info(f"Guest {guest['Name']} was {action}")
-        return True
+    def process_action(action, function, success_message):
+        try:
+            function(guest['Plate Number'])
+            st.session_state.guest_actions[guest_key] = action
+            time.sleep(2)
+            st.session_state.pending_guests = fetch_pending_guests()
+            st.rerun()
+        except Exception as e:
+            st.error(f"Error {action} guest: {e}")
 
+    # Custom button styling for full width
+    button_style = """
+    <style>
+    div.stButton > button {
+        width: 100%;
+        font-size: 16px;
+    }
+    </style>
+    """
+    st.markdown(button_style, unsafe_allow_html=True)
+    
+    # Buttons in their respective columns
     with col1:
         if st.button("✓ Approve", key=f"approve_{index}", type="primary"):
-            try:
-                approve_guest(guest['Plate Number'])
-                st.session_state.guest_actions[guest_key] = 'approved'
-                # Force a refresh of pending guests
-                st.session_state.pending_guests = fetch_pending_guests()
-                st.rerun()
-            except Exception as e:
-                st.error(f"Error approving guest: {e}")
+            process_action('approved', approve_guest, f"Guest {guest['Name']} approved successfully.")
 
     with col2:
         if st.button("✗ Reject", key=f"reject_{index}", type="secondary"):
-            try:
-                reject_guest(guest['Plate Number'])
-                st.session_state.guest_actions[guest_key] = 'rejected'
-                # Force a refresh of pending guests
-                st.session_state.pending_guests = fetch_pending_guests()
-                st.rerun()
-            except Exception as e:
-                st.error(f"Error rejecting guest: {e}")
-
-    return False
+            process_action('rejected', reject_guest, f"Guest {guest['Name']} rejected successfully.")
 
 def render_pending_guests_section(latest_pending_guests=None):
-    """Render the pending guests section in the sidebar."""
+    """Render the pending guest approvals section."""
     st.markdown("### Pending Guest Approvals")
 
-    # Ensure we have the latest pending guests
+    # Fetch latest pending guests if not provided
     if latest_pending_guests is None:
         try:
             latest_pending_guests = fetch_pending_guests()
@@ -59,20 +61,16 @@ def render_pending_guests_section(latest_pending_guests=None):
             return
 
     # Initialize guest actions if not exists
-    if 'guest_actions' not in st.session_state:
-        st.session_state.guest_actions = {}
+    st.session_state.setdefault('guest_actions', {})
 
-    # Check if data exists and is not empty
     if latest_pending_guests is not None and not latest_pending_guests.empty:
-        # Filter out guests that have already been acted upon
+        # Filter pending guests who haven't been acted upon
         pending_guests = latest_pending_guests[
             ~latest_pending_guests['Plate Number'].isin(st.session_state.guest_actions.keys())
         ]
 
         if not pending_guests.empty:
-            # Debug print to verify all guests are being processed
             st.write(f"Total pending guests: {len(pending_guests)}")
-            
             for index, guest in pending_guests.iterrows():
                 with st.expander(f"📋 {guest['Name']} ({guest['Plate Number']})"):
                     st.markdown(f"""
@@ -88,6 +86,8 @@ def render_pending_guests_section(latest_pending_guests=None):
     else:
         st.info("👍 No pending approvals")
 
+    st_autorefresh(interval=2000, key="pending_refresh")
+    
 def render_sidebar(latest_pending_guests=None):
     """Render the main sidebar with navigation and pending approvals."""
     with st.sidebar:

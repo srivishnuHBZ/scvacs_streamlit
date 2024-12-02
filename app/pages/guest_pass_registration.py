@@ -139,5 +139,5 @@ def render_page():
         else:
             st.info("No recent registrations found")
 
-    # Auto refresh for both the table and success message state
-    st_autorefresh(interval=1000, key="page_refresh")
+        # Auto refresh for both the table and success message state
+        st_autorefresh(interval=2000, key="page_refresh")
