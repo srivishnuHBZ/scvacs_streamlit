@@ -11,7 +11,7 @@ def render_page():
     password = st.text_input("Password", type="password", placeholder="Enter your password")
 
     if st.button("Login"):
-        if username == "" and password == "": 
+        if username == "ramesh" and password == "ramesh@123": 
             set_logged_in()  # Update session state
             st.success("Login successful! Redirecting...")
             st.rerun()  # Reload the app to reflect logged-in state

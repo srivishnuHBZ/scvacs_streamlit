@@ -33,7 +33,7 @@ def handle_guest_approval(guest, index):
                 elif message_type == "warning":
                     st.warning(success_message)
             
-            time.sleep(2)
+            time.sleep(5)
             st.session_state.pending_guests = fetch_pending_guests()
             st.rerun()
         except Exception as e:
