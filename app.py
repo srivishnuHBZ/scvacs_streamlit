@@ -10,14 +10,6 @@ from app.pages.guest_form import render_guest_page
 from app.pages.sidebar import LOGGED_IN_MENU
 from app.database import fetch_pending_guests
 
-# Set page configuration
-st.set_page_config(
-    page_title="Smart Campus Vehicle Access Control System",  
-    page_icon="🚗", 
-    layout="wide",
-    initial_sidebar_state="expanded"
-)
-
 def initialize_session_state():
     """Initialize session state variables if they don't exist."""
     if "logged_in" not in st.session_state:
@@ -42,6 +34,28 @@ def main():
     # Initialize session state
     initialize_session_state()
     
+    # Get route and check if it's guest page
+    route = get_page_route()
+    
+    if route == "guest":
+        # For guest page, set minimal page config without sidebar
+        st.set_page_config(
+            page_title="Guest Registration",
+            page_icon="🚗",
+            layout="centered",
+            initial_sidebar_state="collapsed"
+        )
+        render_guest_page()
+        return
+    else:
+        # For all other pages, use the default wide layout with sidebar
+        st.set_page_config(
+            page_title="Smart Campus Vehicle Access Control System",
+            page_icon="🚗",
+            layout="wide",
+            initial_sidebar_state="expanded"
+        )
+    
     # Fetch pending guests
     try:
         latest_pending_guests = fetch_pending_guests()
@@ -49,16 +63,8 @@ def main():
         st.error(f"Error fetching pending guests: {e}")
         latest_pending_guests = None
     
-    # Get route and selected page
-    route = get_page_route()
-    
     # Render sidebar with latest pending guests
     selected = render_sidebar()
-    
-    if route == "guest":
-        # Render guest page without sidebar for external users
-        render_guest_page()
-        return
     
     # Handle page routing
     if selected == "Login":
