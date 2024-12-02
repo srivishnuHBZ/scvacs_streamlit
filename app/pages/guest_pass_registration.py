@@ -112,7 +112,8 @@ def render_page():
                         "address": address,
                         "visit_purpose": visit_purpose,
                         "check_in_date": check_in_date,
-                        "check_out_date": check_out_date
+                        "check_out_date": check_out_date,
+                        "is_approved": "1"
                     }
 
                     if insert_guest(guest_data):

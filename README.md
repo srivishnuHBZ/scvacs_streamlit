@@ -1,54 +1,33 @@
-# __init__.py files are required to treat directories as Python packages. They are useful for organizing your project and enabling modular imports.
+# SMART CAMPUS VEHICLE ACCESS CONTROL SYSTEM
 
+## Overview
 
-SQL Server (MSSQL)
-Versions Available: 2022, 2019, 2017
-Key Features:
-Enterprise-grade database management system.
-Full integration with Microsoft tools (e.g., Power BI, Azure).
-Features like in-memory processing and advanced analytics.
-Best Use Cases:
-Enterprise systems and reporting.
-Applications requiring advanced data integration.
-Business Intelligence (BI) and data warehousing.
-Python Library: pyodbc, pymssql.
+University Malaysia Sabah faces significant challenges related to security, traffic management, and operational efficiency due to its outdated vehicle entry control system. These issues emphasize the urgent need for a modern solution that leverages cutting-edge technology.
 
+This project aims to implement a **Smart Campus Vehicle Access Control System**, designed to address the existing deficiencies and enhance campus safety and operational efficiency. The system will focus on several key areas, including user management, vehicle registration, vehicle number plate recognition (VNPR), guest pass management, mobile app integration, automated alerts, and comprehensive security infrastructure.
 
-I want create a section for approve or reject guest (on top of Recent Guest Registrations) that recently registered which is stored to table called guest_temp. 
+## Key Features
 
-i attach here sql query that used to create guest_temp:
-CREATE TABLE guest_temp (
-name NVARCHAR(255) NOT NULL,
-plate_number NVARCHAR(50) NOT NULL,
-vehicle_type NVARCHAR(30),
-id_number NVARCHAR(50) NOT NULL,
-phone_number NVARCHAR(15),
-email NVARCHAR(100),
-address NVARCHAR(100),
-visit_purpose NVARCHAR(255),
-check_in_date DATETIME,
-check_out_date DATETIME,
-);
+- **User Management**: Seamless user management for different campus stakeholders.
+- **Vehicle Registration**: Efficient vehicle registration system for authorized vehicles.
+- **Vehicle Number Plate Recognition (VNPR)**: Cutting-edge VNPR system for accurate vehicle entry and exit tracking.
+- **Guest Pass Management**: Simple process for managing guest vehicle passes.
+- **Mobile App Integration**: Provides a user-friendly mobile interface for accessing and managing vehicle entry.
+- **Automated Alert System**: Real-time alerts for security and operational purposes.
+- **Security Infrastructure Integration**: Enhances overall campus security through system integration.
 
-I want the the system to fetch continuously whenever this table have new entry, if got new entry then diplay name, plate_number , vehicle_type , phone_number, visit_purpose, check_in_date , check_out_date along with 2 buttons, APPROVE and REJECT
+## Stakeholders
 
-IF APPROVE = 
-    then update to the guest table
-    once pump the data to this guest table, DELETE the existing data from guest_temp table, 
-ELSE REJECT
-    then just delete the data from guest_temp table.
+This system will benefit a variety of stakeholders, including:
+- **Grab Drivers and Tourists**: Enabling smooth and secure vehicle entry.
+- **Academic Faculty**: Providing an efficient method to manage vehicle access.
+- **Security Officers**: Offering real-time monitoring and alerts to ensure safety.
+- **Administrative Staff**: Helping in the management of campus vehicles and guest passes.
 
-help me change the code logic accordingly with break into methods
+## Project Objectives
 
-i attach the query that i used to create this table:
-CREATE TABLE guest (
-name NVARCHAR(255) NOT NULL,
-plate_number NVARCHAR(50) NOT NULL,
-id_number NVARCHAR(50) NOT NULL,
-phone_number NVARCHAR(15),
-email NVARCHAR(255),
-address NVARCHAR(255),
-visit_purpose NVARCHAR(255),
-check_in_date DATETIME,
-check_out_date DATETIME,
-);
+- **Enhance Campus Safety**: By automating vehicle entry and integrating with existing security systems.
+- **Increase Operational Efficiency**: Reducing manual interventions and improving traffic flow.
+- **Modernize the Campus**: Addressing the urgent need for a more efficient and secure vehicle entry system.
+
+This project is crucial in creating a safer and more efficient campus environment, helping to meet the growing demand for modernization and development.

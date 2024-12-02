@@ -18,15 +18,26 @@ def handle_guest_approval(guest, index):
     guest_key = guest['Plate Number']
     col1, col2 = st.columns(2, gap="small")
 
-    def process_action(action, function, success_message):
+    # Variable to store the message
+    message_placeholder = st.empty()
+
+    def process_action(action, function, success_message, message_type="success"):
         try:
             function(guest['Plate Number'])
             st.session_state.guest_actions[guest_key] = action
+            
+            # Display message once, spanning both columns
+            with message_placeholder:
+                if message_type == "success":
+                    st.success(success_message)
+                elif message_type == "warning":
+                    st.warning(success_message)
+            
             time.sleep(2)
             st.session_state.pending_guests = fetch_pending_guests()
             st.rerun()
         except Exception as e:
-            st.error(f"Error {action} guest: {e}")
+            message_placeholder.error(f"Error {action} guest: {e}")
 
     # Custom button styling for full width
     button_style = """
@@ -42,11 +53,21 @@ def handle_guest_approval(guest, index):
     # Buttons in their respective columns
     with col1:
         if st.button("✓ Approve", key=f"approve_{index}", type="primary"):
-            process_action('approved', approve_guest, f"Guest {guest['Name']} approved successfully.")
+            process_action(
+                'approved', 
+                approve_guest, 
+                f"Guest {guest['Name']} ({guest['Plate Number']}) Approved.", 
+                message_type="success"
+            )
 
     with col2:
         if st.button("✗ Reject", key=f"reject_{index}", type="secondary"):
-            process_action('rejected', reject_guest, f"Guest {guest['Name']} rejected successfully.")
+            process_action(
+                'rejected', 
+                reject_guest, 
+                f"Guest {guest['Name']} ({guest['Plate Number']}) Rejected.", 
+                message_type="warning"
+            )
 
 def render_pending_guests_section(latest_pending_guests=None):
     """Render the pending guest approvals section."""

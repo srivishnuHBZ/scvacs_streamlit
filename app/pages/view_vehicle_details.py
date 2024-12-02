@@ -50,7 +50,7 @@ def render_page():
     if "status" not in st.session_state:
         st.session_state.status = None
 
-    st_autorefresh(interval=3000, key="vehicle_history_refresh")
+    st_autorefresh(interval=2000, key="vehicle_history_refresh")
 
     try:
         status, vehicle_df = check_for_updates()

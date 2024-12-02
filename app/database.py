@@ -41,11 +41,11 @@ def insert_guest(guest_data):
     try:
         query = """
         INSERT INTO guest (
-            name, plate_number, id_number, phone_number,
-            email, address, visit_purpose, check_in_date, check_out_date
+            name, plate_number, id_number, phone_number, email,
+            address, visit_purpose, check_in_date, check_out_date, is_approved
         ) VALUES (
-            :name, :plate_number, :id_number, :phone_number,
-            :email, :address, :visit_purpose, :check_in_date, :check_out_date
+            :name, :plate_number, :id_number, :phone_number, :email, 
+            :address, :visit_purpose, :check_in_date, :check_out_date, :is_approved
         )
         """
         with engine.connect() as conn:
@@ -171,31 +171,34 @@ def fetch_pending_guests():
             return pd.DataFrame()
 
 def approve_guest(plate_number):
-    """Approve a guest by moving their data to the guest table and deleting from guest_temp."""
     try:
         with SessionLocal() as session:
             insert_query = """
-            INSERT INTO guest (name, plate_number, id_number, phone_number, email, address, visit_purpose, check_in_date, check_out_date)
-            SELECT name, plate_number, id_number, phone_number, email, address, visit_purpose, check_in_date, check_out_date
+            INSERT INTO guest (name, plate_number, id_number, phone_number, email, address, visit_purpose, check_in_date, check_out_date, is_approved)
+            SELECT name, plate_number, id_number, phone_number, email, address, visit_purpose, check_in_date, check_out_date, :is_approved
             FROM guest_temp WHERE plate_number = :plate_number
             """
             delete_query = "DELETE FROM guest_temp WHERE plate_number = :plate_number"
-            session.execute(text(insert_query), {"plate_number": plate_number})
+            session.execute(text(insert_query), {"plate_number": plate_number, "is_approved": "1"})
             session.execute(text(delete_query), {"plate_number": plate_number})
             session.commit()
-            st.success(f"Guest with plate number {plate_number} approved successfully.")
     except SQLAlchemyError as e:
         session.rollback()
         st.error(f"Error approving guest: {e}")
 
 def reject_guest(plate_number):
-    """Reject a guest by deleting their data from guest_temp."""
     try:
         with SessionLocal() as session:
+            insert_query = """
+            INSERT INTO guest (name, plate_number, id_number, phone_number, email, address, visit_purpose, check_in_date, check_out_date, is_approved)
+            SELECT name, plate_number, id_number, phone_number, email, address, visit_purpose, check_in_date, check_out_date, :is_approved
+            FROM guest_temp WHERE plate_number = :plate_number
+            """
             delete_query = "DELETE FROM guest_temp WHERE plate_number = :plate_number"
+            session.execute(text(insert_query), {"plate_number": plate_number, "is_approved": "0"})
             session.execute(text(delete_query), {"plate_number": plate_number})
             session.commit()
-            st.warning(f"Guest with plate number {plate_number} rejected.")
     except SQLAlchemyError as e:
         session.rollback()
         st.error(f"Error rejecting guest: {e}")
+
