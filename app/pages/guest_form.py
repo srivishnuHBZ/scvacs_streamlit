@@ -84,63 +84,59 @@ def show_pending_verification():
                             if is_approved is not None:  # Status has been updated
                                 st.session_state.verification_complete = True
                                 st.session_state.approval_status = is_approved
+                                
+                                # Clear the verification UI
+                                verification_header.empty()
+                                verification_message.empty()
+                                progress_bar.empty()
+                                status_placeholder.empty()
+                                
+                                # Display the final status
+                                if is_approved:
+                                    st.markdown("""
+                                        <div style='display: flex; justify-content: center;'>
+                                            <div style='background-color: #e7f3eb; padding: 20px; border-radius: 10px; 
+                                                    border-left: 5px solid #28a745; margin: 20px 0; text-align: center;'>
+                                                <h3 style='color: #28a745; margin: 0 0 10px 0;'>
+                                                    ✅ Registration Approved
+                                                </h3>
+                                                <p style='margin: 0; color: #2c3e50;'>
+                                                    Your vehicle registration has been approved. You may proceed to the entrance.
+                                                </p>
+                                            </div>
+                                        </div>
+                                    """, unsafe_allow_html=True)
+                                    
+                                    # Add instructions  
+                                    st.markdown("<p style='text-align: center; margin-top: 20px;'>"
+                                              "Please show this screen to the security guard at the entrance.</p>", 
+                                              unsafe_allow_html=True)
+                                else:
+                                    st.markdown("""
+                                        <div style='display: flex; justify-content: center;'>
+                                            <div style='background-color: #fbebed; padding: 20px; border-radius: 10px; 
+                                                    border-left: 5px solid #dc3545; margin: 20px 0; text-align: center;'>
+                                                <h3 style='color: #dc3545; margin: 0 0 10px 0;'>
+                                                    ❌ Registration Rejected  
+                                                </h3>
+                                                <p style='margin: 0; color: #2c3e50;'>
+                                                    We're sorry, but your registration has been rejected.
+                                                    <br><br>
+                                                    Please contact the security officer for more information.  
+                                                </p>
+                                            </div>
+                                        </div>
+                                    """, unsafe_allow_html=True)
+
                                 break
                         
-                        # Reset progress bar  
-                        progress_bar.progress(0)
-                        
                         # Update progress bar
-                        for i in range(100):
-                            progress_bar.progress(i + 1)
-                            status_placeholder.markdown("<p style='text-align: center; color: #666;'>"
-                                                     "Checking verification status...</p>", 
-                                                     unsafe_allow_html=True)
-                            time.sleep(1)
+                        progress_bar.progress(0)
+                        status_placeholder.markdown("<p style='text-align: center; color: #666;'>"
+                                                 "Checking verification status...</p>", 
+                                                 unsafe_allow_html=True)
+                        time.sleep(1)
                 
-                # Display final status
-                if st.session_state.verification_complete:
-                    verification_header.empty()
-                    verification_message.empty()
-                    progress_bar.empty()
-                    status_placeholder.empty()
-                    
-                    if st.session_state.approval_status:
-                        st.markdown("""
-                            <div style='background-color: #e7f3eb; padding: 20px; border-radius: 10px; 
-                                    border-left: 5px solid #28a745; margin: 20px 0;'>
-                                <h3 style='color: #28a745; margin: 0 0 10px 0;'>
-                                    ✅ Registration Approved
-                                </h3>
-                                <p style='margin: 0; color: #2c3e50;'>
-                                    Your vehicle registration has been approved. You may proceed to the entrance.
-                                </p>
-                            </div>
-                        """, unsafe_allow_html=True)
-                        
-                        # Add instructions  
-                        st.markdown("<p style='text-align: center; margin-top: 20px;'>"
-                                  "Please show this screen to the security guard at the entrance.</p>", 
-                                  unsafe_allow_html=True)
-                    else:
-                        st.markdown("""
-                            <div style='background-color: #fbebed; padding: 20px; border-radius: 10px; 
-                                    border-left: 5px solid #dc3545; margin: 20px 0;'>
-                                <h3 style='color: #dc3545; margin: 0 0 10px 0;'>
-                                    ❌ Registration Rejected  
-                                </h3>
-                                <p style='margin: 0; color: #2c3e50;'>
-                                    We're sorry, but your registration has been rejected.
-                                    <br><br>
-                                    Please contact the security officer for more information.  
-                                </p>
-                            </div>
-                        """, unsafe_allow_html=True)
-                        
-                        # Add a retry button
-                        if st.button("Register Again"):
-                            st.session_state.clear() 
-                            st.rerun()
-                            
             except SQLAlchemyError as e:
                 st.error(f"Database error occurred: {str(e)}")
                 st.session_state.verification_complete = True
