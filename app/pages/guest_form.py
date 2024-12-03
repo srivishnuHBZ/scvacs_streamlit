@@ -32,18 +32,6 @@ def calculate_checkout_date(check_in_date, duration):
         return check_in_date + timedelta(days=2)
     return check_in_date
 
-# def show_pending_verification():
-#     st.markdown("<br><br>", unsafe_allow_html=True)
-#     col1, col2, col3 = st.columns([1, 2, 1])
-#     with col2:
-#         st.markdown("<h2 style='text-align: center; color: #1E88E5;'>Pending Verification from Guards</h2>", unsafe_allow_html=True)
-#         st.markdown("<p style='text-align: center; font-size: 18px; margin-bottom: 2rem;'>Please wait while our security personnel verify your registration.</p>", unsafe_allow_html=True)
-        
-#         progress_bar = st.progress(0)
-#         for i in range(100):
-#             progress_bar.progress(i + 1)
-#             time.sleep(1)
-
 def show_pending_verification():
     st.markdown("<br><br>", unsafe_allow_html=True)
     col1, col2, col3 = st.columns([1, 2, 1])
@@ -56,11 +44,14 @@ def show_pending_verification():
     
     with col2:
         if not st.session_state.verification_complete:
-            st.markdown("<h2 style='text-align: center; color: #1E88E5;'>Pending Verification from Guards</h2>", 
-                       unsafe_allow_html=True)
-            st.markdown("<p style='text-align: center; font-size: 18px; margin-bottom: 2rem;'>"
-                       "Please wait while our security personnel verify your registration.</p>", 
-                       unsafe_allow_html=True)
+            verification_header = st.empty()
+            verification_message = st.empty()
+            
+            verification_header.markdown("<h2 style='text-align: center; color: #1E88E5;'>Pending Verification from Guards</h2>", 
+                                    unsafe_allow_html=True)
+            verification_message.markdown("<p style='text-align: center; font-size: 18px; margin-bottom: 2rem;'>"
+                                    "Please wait while our security personnel verify your registration.</p>", 
+                                    unsafe_allow_html=True)
             
             progress_bar = st.progress(0)
             status_placeholder = st.empty()
@@ -95,17 +86,21 @@ def show_pending_verification():
                                 st.session_state.approval_status = is_approved
                                 break
                         
-                        # Update progress bar (loops every 100 seconds)
-                        current_time = time.time()
-                        progress = int((current_time % 100))
-                        progress_bar.progress(progress)
-                        status_placeholder.markdown("<p style='text-align: center; color: #666;'>"
-                                                 "Checking verification status...</p>", 
-                                                 unsafe_allow_html=True)
-                        time.sleep(1)
+                        # Reset progress bar  
+                        progress_bar.progress(0)
+                        
+                        # Update progress bar
+                        for i in range(100):
+                            progress_bar.progress(i + 1)
+                            status_placeholder.markdown("<p style='text-align: center; color: #666;'>"
+                                                     "Checking verification status...</p>", 
+                                                     unsafe_allow_html=True)
+                            time.sleep(1)
                 
                 # Display final status
                 if st.session_state.verification_complete:
+                    verification_header.empty()
+                    verification_message.empty()
                     progress_bar.empty()
                     status_placeholder.empty()
                     
@@ -122,7 +117,7 @@ def show_pending_verification():
                             </div>
                         """, unsafe_allow_html=True)
                         
-                        # Add instructions
+                        # Add instructions  
                         st.markdown("<p style='text-align: center; margin-top: 20px;'>"
                                   "Please show this screen to the security guard at the entrance.</p>", 
                                   unsafe_allow_html=True)
@@ -131,25 +126,25 @@ def show_pending_verification():
                             <div style='background-color: #fbebed; padding: 20px; border-radius: 10px; 
                                     border-left: 5px solid #dc3545; margin: 20px 0;'>
                                 <h3 style='color: #dc3545; margin: 0 0 10px 0;'>
-                                    ❌ Registration Rejected
+                                    ❌ Registration Rejected  
                                 </h3>
                                 <p style='margin: 0; color: #2c3e50;'>
                                     We're sorry, but your registration has been rejected.
                                     <br><br>
-                                    Please contact the security office for more information.
+                                    Please contact the security officer for more information.  
                                 </p>
                             </div>
                         """, unsafe_allow_html=True)
                         
                         # Add a retry button
                         if st.button("Register Again"):
-                            st.session_state.form_submitted = False
+                            st.session_state.clear() 
                             st.rerun()
                             
             except SQLAlchemyError as e:
                 st.error(f"Database error occurred: {str(e)}")
                 st.session_state.verification_complete = True
-            except Exception as e:
+            except Exception as e:  
                 st.error(f"An unexpected error occurred: {str(e)}")
                 st.session_state.verification_complete = True
 
@@ -160,10 +155,10 @@ def show_registration_form(form_container):
         st.markdown("<br>", unsafe_allow_html=True)
 
         with st.form("guest_registration"):
-            # Personal Information
+            # Personal Information 
             st.subheader("Personal Information")
             name = st.text_input("Full Name *")
-            id_number = st.text_input("IC Number/Passport *")
+            id_number = st.text_input("IC Number/Passport *") 
             phone_number = st.text_input("Phone Number *")
             email = st.text_input("Email Address")
             address = st.text_input("Address")
@@ -173,7 +168,7 @@ def show_registration_form(form_container):
             plate_number = st.text_input("Vehicle Plate Number *").upper()
             vehicle_type = st.selectbox("Vehicle Type", ["Car", "Motorcycle", "Van", "Others"])
             
-            # Visit Details
+            # Visit Details  
             st.subheader("Visit Details")
             visit_purpose = st.text_area("Purpose of Visit *")
             check_in_date = st.date_input("Visit Date")
@@ -196,7 +191,7 @@ def save_guest_registration(name, id_number, phone_number, email, address, plate
 
         new_guest = GuestTemp(
             name=name,
-            plate_number=plate_number,
+            plate_number=plate_number, 
             vehicle_type=vehicle_type,
             id_number=id_number,
             phone_number=phone_number,
@@ -206,7 +201,7 @@ def save_guest_registration(name, id_number, phone_number, email, address, plate
             check_in_date=check_in_datetime,
             check_out_date=check_out_datetime
         )
-
+        
         db = SessionLocal()
         try:
             db.add(new_guest)
@@ -250,5 +245,4 @@ def render_guest_page():
         if save_guest_registration(name, id_number, phone_number, email, address, plate_number, vehicle_type, visit_purpose, check_in_date, duration):
             st.session_state.form_submitted = True
             st.session_state.plate_number = plate_number
-            form_container.empty()
-            st.rerun()  # Replace this in real implementation
+            st.rerun()
