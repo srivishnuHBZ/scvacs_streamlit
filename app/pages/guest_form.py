@@ -4,6 +4,7 @@ from datetime import datetime, timedelta
 from sqlalchemy import Column, String, DateTime, text
 from sqlalchemy.dialects.mssql import UNIQUEIDENTIFIER
 from app.database import Base, SessionLocal
+from sqlalchemy.exc import SQLAlchemyError
 
 class GuestTemp(Base):
     __tablename__ = "guest_temp"
@@ -31,17 +32,126 @@ def calculate_checkout_date(check_in_date, duration):
         return check_in_date + timedelta(days=2)
     return check_in_date
 
+# def show_pending_verification():
+#     st.markdown("<br><br>", unsafe_allow_html=True)
+#     col1, col2, col3 = st.columns([1, 2, 1])
+#     with col2:
+#         st.markdown("<h2 style='text-align: center; color: #1E88E5;'>Pending Verification from Guards</h2>", unsafe_allow_html=True)
+#         st.markdown("<p style='text-align: center; font-size: 18px; margin-bottom: 2rem;'>Please wait while our security personnel verify your registration.</p>", unsafe_allow_html=True)
+        
+#         progress_bar = st.progress(0)
+#         for i in range(100):
+#             progress_bar.progress(i + 1)
+#             time.sleep(1)
+
 def show_pending_verification():
     st.markdown("<br><br>", unsafe_allow_html=True)
     col1, col2, col3 = st.columns([1, 2, 1])
+    
+    # Initialize session state for tracking verification status
+    if 'verification_complete' not in st.session_state:
+        st.session_state.verification_complete = False
+        st.session_state.approval_status = None
+        st.session_state.verification_start_time = datetime.now()
+    
     with col2:
-        st.markdown("<h2 style='text-align: center; color: #1E88E5;'>Pending Verification from Guards</h2>", unsafe_allow_html=True)
-        st.markdown("<p style='text-align: center; font-size: 18px; margin-bottom: 2rem;'>Please wait while our security personnel verify your registration.</p>", unsafe_allow_html=True)
-        
-        progress_bar = st.progress(0)
-        for i in range(100):
-            progress_bar.progress(i + 1)
-            time.sleep(1)
+        if not st.session_state.verification_complete:
+            st.markdown("<h2 style='text-align: center; color: #1E88E5;'>Pending Verification from Guards</h2>", 
+                       unsafe_allow_html=True)
+            st.markdown("<p style='text-align: center; font-size: 18px; margin-bottom: 2rem;'>"
+                       "Please wait while our security personnel verify your registration.</p>", 
+                       unsafe_allow_html=True)
+            
+            progress_bar = st.progress(0)
+            status_placeholder = st.empty()
+            
+            # Calculate timeout (5 minutes)
+            timeout_duration = timedelta(minutes=5)
+            
+            try:
+                with SessionLocal() as session:
+                    while not st.session_state.verification_complete:
+                        # Check if timeout has been reached
+                        if datetime.now() - st.session_state.verification_start_time > timeout_duration:
+                            st.error("Verification timeout reached. Please try again or contact security.")
+                            break
+                        
+                        # Query the guest table using plate number
+                        result = session.execute(
+                            text("""
+                                SELECT TOP 1 is_approved
+                                FROM guest
+                                WHERE plate_number = :plate_number
+                                ORDER BY created_at DESC
+                            """),
+                            {"plate_number": st.session_state.get('plate_number', '')}
+                        ).fetchone()
+                        
+                        if result:
+                            is_approved = result[0]
+                            
+                            if is_approved is not None:  # Status has been updated
+                                st.session_state.verification_complete = True
+                                st.session_state.approval_status = is_approved
+                                break
+                        
+                        # Update progress bar (loops every 100 seconds)
+                        current_time = time.time()
+                        progress = int((current_time % 100))
+                        progress_bar.progress(progress)
+                        status_placeholder.markdown("<p style='text-align: center; color: #666;'>"
+                                                 "Checking verification status...</p>", 
+                                                 unsafe_allow_html=True)
+                        time.sleep(1)
+                
+                # Display final status
+                if st.session_state.verification_complete:
+                    progress_bar.empty()
+                    status_placeholder.empty()
+                    
+                    if st.session_state.approval_status:
+                        st.markdown("""
+                            <div style='background-color: #e7f3eb; padding: 20px; border-radius: 10px; 
+                                    border-left: 5px solid #28a745; margin: 20px 0;'>
+                                <h3 style='color: #28a745; margin: 0 0 10px 0;'>
+                                    ✅ Registration Approved
+                                </h3>
+                                <p style='margin: 0; color: #2c3e50;'>
+                                    Your vehicle registration has been approved. You may proceed to the entrance.
+                                </p>
+                            </div>
+                        """, unsafe_allow_html=True)
+                        
+                        # Add instructions
+                        st.markdown("<p style='text-align: center; margin-top: 20px;'>"
+                                  "Please show this screen to the security guard at the entrance.</p>", 
+                                  unsafe_allow_html=True)
+                    else:
+                        st.markdown("""
+                            <div style='background-color: #fbebed; padding: 20px; border-radius: 10px; 
+                                    border-left: 5px solid #dc3545; margin: 20px 0;'>
+                                <h3 style='color: #dc3545; margin: 0 0 10px 0;'>
+                                    ❌ Registration Rejected
+                                </h3>
+                                <p style='margin: 0; color: #2c3e50;'>
+                                    We're sorry, but your registration has been rejected.
+                                    <br><br>
+                                    Please contact the security office for more information.
+                                </p>
+                            </div>
+                        """, unsafe_allow_html=True)
+                        
+                        # Add a retry button
+                        if st.button("Register Again"):
+                            st.session_state.form_submitted = False
+                            st.rerun()
+                            
+            except SQLAlchemyError as e:
+                st.error(f"Database error occurred: {str(e)}")
+                st.session_state.verification_complete = True
+            except Exception as e:
+                st.error(f"An unexpected error occurred: {str(e)}")
+                st.session_state.verification_complete = True
 
 def show_registration_form(form_container):
     with form_container:
@@ -139,5 +249,6 @@ def render_guest_page():
     if submitted:
         if save_guest_registration(name, id_number, phone_number, email, address, plate_number, vehicle_type, visit_purpose, check_in_date, duration):
             st.session_state.form_submitted = True
+            st.session_state.plate_number = plate_number
             form_container.empty()
             st.rerun()  # Replace this in real implementation
