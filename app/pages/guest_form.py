@@ -61,6 +61,7 @@ def show_pending_verification():
             
             try:
                 with SessionLocal() as session:
+                    progress = 0  # Initial progress value
                     while not st.session_state.verification_complete:
                         # Check if timeout has been reached
                         if datetime.now() - st.session_state.verification_start_time > timeout_duration:
@@ -93,7 +94,7 @@ def show_pending_verification():
                                 
                                 # Display the final status
                                 if is_approved:
-                                    st.markdown("""
+                                    st.markdown(""" 
                                         <div style='display: flex; justify-content: center;'>
                                             <div style='background-color: #e7f3eb; padding: 20px; border-radius: 10px; 
                                                     border-left: 5px solid #28a745; margin: 20px 0; text-align: center;'>
@@ -112,7 +113,7 @@ def show_pending_verification():
                                               "Please show this screen to the security guard at the entrance.</p>", 
                                               unsafe_allow_html=True)
                                 else:
-                                    st.markdown("""
+                                    st.markdown(""" 
                                         <div style='display: flex; justify-content: center;'>
                                             <div style='background-color: #fbebed; padding: 20px; border-radius: 10px; 
                                                     border-left: 5px solid #dc3545; margin: 20px 0; text-align: center;'>
@@ -130,13 +131,16 @@ def show_pending_verification():
 
                                 break
                         
-                        # Update progress bar
-                        progress_bar.progress(0)
-                        status_placeholder.markdown("<p style='text-align: center; color: #666;'>"
-                                                 "Checking verification status...</p>", 
-                                                 unsafe_allow_html=True)
-                        time.sleep(1)
-                
+                        # Update progress bar incrementally
+                        progress += 3  # Adjust the increment value (e.g., 5%) per loop
+                        if progress > 100:
+                            progress = 100
+                        progress_bar.progress(progress)
+                        
+                        # Update the status message to keep the user informed
+                        status_placeholder.markdown("<p style='text-align: center; color: #666;'>""Checking verification status...</p>", unsafe_allow_html=True)
+                        time.sleep(2)  # Delay to simulate processing time
+                    
             except SQLAlchemyError as e:
                 st.error(f"Database error occurred: {str(e)}")
                 st.session_state.verification_complete = True
