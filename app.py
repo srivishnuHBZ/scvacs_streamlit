@@ -42,7 +42,7 @@ def main():
         st.set_page_config(
             page_title="Guest Registration",
             page_icon="🚗",
-            layout="centered",
+            layout="wide",
             initial_sidebar_state="collapsed"
         )
         render_guest_page()
