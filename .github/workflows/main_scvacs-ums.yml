@@ -30,6 +30,7 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
         
+      # Optional: Add step to run tests here (PyTest, Django test suites, etc.)
 
       - name: Zip artifact for deployment
         run: zip release.zip ./* -r
@@ -65,4 +66,4 @@ jobs:
         with:
           app-name: 'scvacs-ums'
           slot-name: 'Production'
-          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_CC9A499EE24D4C8BABE888BD26328F3B }}
+          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_0C03EA27BE8D4D6CBF66E00580BEC3AE }}
