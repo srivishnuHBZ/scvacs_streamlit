@@ -22,6 +22,8 @@ engine = create_engine(DATABASE_URL, echo=True)  # Echo=True for detailed logs
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 
+# Queries from vehicle_history.py
+
 def fetch_vehicle_history():
     try:
         with engine.connect() as conn:
@@ -36,6 +38,8 @@ def fetch_vehicle_history():
             return data
     except Exception as e:
         return f"Error fetching vehicle history: {e}"
+
+# Queries from guess_pass_registration.py
 
 def insert_guest(guest_data):
     try:
@@ -62,6 +66,7 @@ def fetch_recent_registrations():
             query = """
             SELECT name, plate_number, phone_number, check_in_date
             FROM guest
+            WHERE is_approved = 1
             ORDER BY created_at DESC
             """
             result = conn.execute(text(query))
@@ -73,6 +78,7 @@ def fetch_recent_registrations():
         return pd.DataFrame()
     
 # Queries from view_vehicle_details.py
+
 def check_for_updates():
     """
     Check for updates in the vehicle_history table by querying the latest timestamp.
@@ -92,7 +98,6 @@ def check_for_updates():
         st.session_state.latest_timestamp = latest_timestamp
         return get_latest_vehicle_detail()
 
-# Queries from view_vehicle_details.py
 def get_latest_vehicle_detail():
     """
     Query and return the most recent vehicle detail from vehicle_history.
@@ -155,7 +160,8 @@ def get_latest_vehicle_detail():
             }])
 
 
-# guest pass registration
+# Queries from sidebar.py
+
 def fetch_pending_guests():
     """Fetch all pending guests from guest_temp table."""
     query = """
