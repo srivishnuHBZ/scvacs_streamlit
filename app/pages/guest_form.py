@@ -154,6 +154,10 @@ def show_registration_form(form_container):
         st.markdown("<h1 style='text-align: center;'>Guest Vehicle Registration Form</h1>", unsafe_allow_html=True)
         st.markdown("<br>", unsafe_allow_html=True)
 
+        # Initialize plate_number in session state if not already set
+        if 'plate_number' not in st.session_state:
+            st.session_state.plate_number = ""
+    
         with st.form("guest_registration"):
             # Personal Information 
             st.subheader("Personal Information")
@@ -165,7 +169,10 @@ def show_registration_form(form_container):
             
             # Vehicle Information
             st.subheader("Vehicle Information")
-            plate_number = st.text_input("Vehicle Plate Number *").upper()
+            # Use plate_number from session state and update it with capitalization
+            plate_number = st.text_input("Vehicle Plate Number *", value=st.session_state.plate_number)
+            # Update the plate number in session state to uppercase
+            st.session_state.plate_number = plate_number.upper()
             vehicle_type = st.selectbox("Vehicle Type", ["Car", "Motorcycle", "Van", "Others"])
             
             # Visit Details  
