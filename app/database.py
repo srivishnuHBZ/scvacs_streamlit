@@ -5,11 +5,11 @@ import pandas as pd
 import streamlit as st
 from sqlalchemy.exc import SQLAlchemyError
 
-server = "34.30.185.244"  
+server = "34.60.160.28"  
 database = "scvacs"       
 username = "sqlserver"    
 password = urllib.parse.quote_plus("scvacs@1234")  # Escape special characters in password
-port = "1433"  # Default SQL Server port
+port = "1433"  # Default MS SQL Server port
 
 # SQLAlchemy connection string using pytds
 DATABASE_URL = (
