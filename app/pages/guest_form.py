@@ -1,5 +1,7 @@
 import streamlit as st
 import time
+import os
+import base64
 from datetime import datetime, timedelta
 from sqlalchemy import Column, String, DateTime, text
 from sqlalchemy.dialects.mssql import UNIQUEIDENTIFIER
@@ -150,7 +152,24 @@ def show_pending_verification():
 
 def show_registration_form(form_container):
     with form_container:
-        st.markdown("<img src='https://seeklogo.com/images/U/Universiti_Malaysia_Sabah-logo-590ACB05AA-seeklogo.com.png' width='250' style='display: block; margin: 0 auto;'>", unsafe_allow_html=True)
+        #st.markdown("<img src='https://seeklogo.com/images/U/Universiti_Malaysia_Sabah-logo-590ACB05AA-seeklogo.com.png' width='250' style='display: block; margin: 0 auto;'>", unsafe_allow_html=True)
+        # Get the current file's directory
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        image_path = os.path.join(current_dir, "ums_logo.png")
+        # Read and encode the image
+        with open(image_path, "rb") as img_file:
+            img_bytes = img_file.read()
+            encoded_image = base64.b64encode(img_bytes).decode()
+        # Display centered image using markdown
+        st.markdown(
+            f"""
+            <div style='text-align: center;'>
+                <img src='data:image/png;base64,{encoded_image}' width='250'/>
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
+        
         st.markdown("<h1 style='text-align: center;'>Guest Vehicle Registration Form</h1>", unsafe_allow_html=True)
         st.markdown("<br>", unsafe_allow_html=True)
 
