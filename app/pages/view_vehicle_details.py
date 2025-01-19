@@ -27,7 +27,29 @@ def display_vehicle_details(vehicle_df, status):
             st.metric("Color", vehicle_df['color'].values[0])
             st.metric("Vehicle Type", vehicle_df['vehicle_type'].values[0])
             st.metric("Detection Time", vehicle_df['detection_time'].values[0])
-    else:
+    
+    elif status == 2:  # Guest vehicle
+        approval_status = "Approved" if vehicle_df['is_approved'].values[0] else "Not Approved"
+        header_color = "green" if vehicle_df['is_approved'].values[0] else "red"
+        
+        st.markdown(
+            f"<div style='background-color: {header_color}; padding: 5px; border-radius: 5px;'>"
+            f"<h2 style='color: white; text-align: center;'>Guest Vehicle - {approval_status}</h2></div>",
+            unsafe_allow_html=True,
+        )
+        st.markdown("<br><br>", unsafe_allow_html=True)
+        
+        col1, col2 = st.columns(2)
+        with col1:
+            st.metric("Guest Name", vehicle_df['guest_name'].values[0])
+            st.metric("Number Plate", vehicle_df['plate_number'].values[0])
+            st.metric("Check-in Date", vehicle_df['check_in_date'].values[0])
+        with col2:
+            st.metric("Visit Purpose", vehicle_df['visit_purpose'].values[0])
+            st.metric("Phone Number", vehicle_df['phone_number'].values[0])
+            st.metric("Check-out Date", vehicle_df['check_out_date'].values[0])
+    
+    else:  # Unregistered vehicle
         st.markdown(
             "<div style='background-color: red; padding: 5px; border-radius: 5px;'>"
             "<h2 style='color: white; text-align: center;'>Unregistered Vehicle Detected</h2></div>",

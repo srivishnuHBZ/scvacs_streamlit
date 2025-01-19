@@ -101,7 +101,10 @@ def check_for_updates():
 def get_latest_vehicle_detail():
     """
     Query and return the most recent vehicle detail from vehicle_history.
-    If registered (status=1), join with registered_vehicle and users tables.
+    Handles three cases:
+    1. Registered vehicles (join with registered_vehicle and users tables)
+    2. Approved guests (join with guest table)
+    3. Unregistered vehicles
     """
     with SessionLocal() as session:
         # Get the latest vehicle_history entry
@@ -120,8 +123,39 @@ def get_latest_vehicle_detail():
         if not latest_vehicle:
             return None, None
 
-        # If vehicle is registered, get additional details
-        if latest_vehicle.registration_status:
+        # First check if it's a guest vehicle
+        guest_query = text("""
+            SELECT 
+                vh.plate_number,
+                g.name as guest_name,
+                g.phone_number,
+                g.email,
+                g.visit_purpose,
+                g.check_in_date,
+                g.check_out_date,
+                g.is_approved,
+                vh.timestamp as detection_time
+            FROM vehicle_history vh
+            INNER JOIN guest g ON vh.plate_number = g.plate_number
+            WHERE vh.plate_number = :plate_number
+        """)
+        guest_result = session.execute(guest_query, {'plate_number': latest_vehicle.plate_number})
+        guest_data = guest_result.fetchone()
+
+        if guest_data:
+            # It's a guest vehicle
+            return 2, pd.DataFrame([{
+                'guest_name' : guest_data.guest_name,
+                'plate_number': guest_data.plate_number,
+                'phone_number': guest_data.phone_number,
+                'visit_purpose': guest_data.visit_purpose,
+                'check_in_date': guest_data.check_in_date.strftime('%d-%m-%Y %H:%M:%S'),
+                'check_out_date': guest_data.check_out_date.strftime('%d-%m-%Y %H:%M:%S'),
+                'is_approved': guest_data.is_approved
+            }])
+        
+        # If not a guest, check if it's a registered vehicle
+        elif latest_vehicle.registration_status:
             registered_query = text("""
                 SELECT 
                     vh.plate_number,
@@ -152,13 +186,13 @@ def get_latest_vehicle_detail():
             ]
             return 1, pd.DataFrame(registered_vehicle_details)
         else:
+            # Unregistered vehicle
             return 0, pd.DataFrame([{
                 'plate_number': latest_vehicle.plate_number,
                 'confidence': latest_vehicle.confidence,
                 'registration_status': latest_vehicle.registration_status,
                 'detection_time': latest_vehicle.timestamp.strftime('%d-%m-%Y %H:%M:%S')
             }])
-
 
 # Queries from sidebar.py
 
