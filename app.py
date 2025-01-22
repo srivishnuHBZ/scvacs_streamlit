@@ -9,6 +9,7 @@ from app.pages.vehicle_history import render_page as history_page
 from app.pages.guest_form import render_guest_page
 from app.pages.sidebar import LOGGED_IN_MENU
 from app.database import fetch_pending_guests
+from app.pages.analytics import render_page as analytics_page
 
 def initialize_session_state():
     """Initialize session state variables if they don't exist."""

@@ -10,6 +10,7 @@ LOGGED_IN_MENU = {
     "View Vehicle Details": "view_vehicle_page",
     "Guest Pass Registration": "guest_pass_registration",
     "Vehicle History": "history_page",
+    "Analytics": "analytics_page", 
     "Logout": None,
 }
 
@@ -126,7 +127,7 @@ def render_sidebar(latest_pending_guests=None):
         selected = option_menu(
             "Main Menu",
             list(LOGGED_IN_MENU.keys()),
-            icons=["eye", "person-plus", "clock-history", "box-arrow-right"],
+            icons=["eye", "person-plus", "clock-history", "graph-up", "box-arrow-right"],
             menu_icon="list",
             default_index=0,
         )

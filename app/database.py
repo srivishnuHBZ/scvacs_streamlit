@@ -241,4 +241,104 @@ def reject_guest(plate_number):
     except SQLAlchemyError as e:
         session.rollback()
         st.error(f"Error rejecting guest: {e}")
+        
+        
+# Queries from analytics.py
+
+def get_total_vehicles_today(conn):
+    query = """
+    SELECT COUNT(DISTINCT plate_number) as total
+    FROM vehicle_history
+    WHERE CAST(timestamp AS DATE) = CAST(GETDATE() AS DATE)
+    """
+    result = conn.execute(text(query)).fetchone()
+    return result.total
+
+def get_unauthorized_attempts(conn):
+    query = """
+    SELECT COUNT(DISTINCT plate_number) as total
+    FROM vehicle_history
+    WHERE registration_status = 0
+    AND CAST(timestamp AS DATE) = CAST(GETDATE() AS DATE)
+    """
+    result = conn.execute(text(query)).fetchone()
+    return result.total
+
+def get_guest_passes_issued(conn):
+    query = """
+    SELECT COUNT(*) as total
+    FROM guest
+    WHERE is_approved = 1
+    AND CAST(created_at AS DATE) = CAST(GETDATE() AS DATE)
+    """
+    result = conn.execute(text(query)).fetchone()
+    return result.total
+
+def get_peak_hour_traffic(conn):
+    query = """
+    SELECT 
+        DATEPART(HOUR, timestamp) as hour,
+        COUNT(*) as traffic_count
+    FROM vehicle_history
+    WHERE CAST(timestamp AS DATE) = CAST(GETDATE() AS DATE)
+    GROUP BY DATEPART(HOUR, timestamp)
+    ORDER BY traffic_count DESC
+    """
+    result = conn.execute(text(query)).fetchone()
+    return f"{result.hour:02d}:00" if result else "N/A"
+
+def get_vehicle_trends(conn):
+    query = """
+    SELECT 
+        CAST(timestamp AS DATE) as date,
+        COUNT(plate_number) as total_vehicles,
+        SUM(CASE WHEN registration_status = 0 THEN 1 ELSE 0 END) as unauthorized,
+        SUM(CASE WHEN registration_status = 1 THEN 1 ELSE 0 END) as authorized
+    FROM vehicle_history
+    WHERE timestamp >= DATEADD(day, -7, GETDATE())
+    GROUP BY CAST(timestamp AS DATE)
+    ORDER BY date
+    """
+    return pd.read_sql(query, conn)
+
+def get_hourly_distribution(conn):
+    query = """
+    SELECT 
+        DATEPART(HOUR, timestamp) as hour,
+        COUNT(*) as count
+    FROM vehicle_history
+    WHERE CAST(timestamp AS DATE) = CAST(GETDATE() AS DATE)
+    GROUP BY DATEPART(HOUR, timestamp)
+    ORDER BY hour
+    """
+    return pd.read_sql(query, conn)
+
+def get_todays_vehicle_history(conn):
+    query = """
+    SELECT 
+        plate_number,
+        confidence,
+        timestamp,
+        CASE WHEN registration_status = 1 THEN 'Registered' ELSE 'Unregistered' END as status
+    FROM vehicle_history
+    WHERE CAST(timestamp AS DATE) = CAST(GETDATE() AS DATE)
+    ORDER BY timestamp DESC
+    """
+    return pd.read_sql(query, conn)
+
+def get_todays_guests(conn):
+    query = """
+    SELECT 
+        name,
+        plate_number,
+        phone_number,
+        visit_purpose,
+        check_in_date,
+        check_out_date,
+        CASE WHEN is_approved = 1 THEN 'Approved' ELSE 'Rejected' END as status
+    FROM guest
+    WHERE CAST(created_at AS DATE) = CAST(GETDATE() AS DATE)
+    ORDER BY created_at DESC
+    """
+    return pd.read_sql(query, conn)
 
