@@ -6,7 +6,6 @@
 #To ensure that your Streamlit app runs automatically whenever you save changes to your code
 #streamlit run app.py --server.runOnSave=true
 
-
 streamlit
 st-pages
 streamlit-option-menu
@@ -15,6 +14,6 @@ pyodbc
 python-dotenv
 sqlalchemy-pytds
 streamlit-autorefresh
-
-
-
+python-tds
+xlsxwriter
+plotly
